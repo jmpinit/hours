@@ -7,9 +7,15 @@
     </head>
     <body>
         <div class="container">
-            <h1>{{title}}</h1>
+            <h1 style="text-decoration: underline;">{{title}}</h1>
+                <h2>Summary</h2>
+                <div class="container">
+                    <p>Over this time period <b>{{name}}</b> worked <b>{{#rounded}}{{total}}{{/rounded}} hours</b>. At ${{rate}} per hour that comes to <b>${{#rounded}}{{earned}}{{/rounded}}.</b></p>
+                </div>
+
+                <h2>Log</h2>
                 {{#days}}
-                <h2>{{#dateString}}{{date}}{{/dateString}}</h2>
+                <h3>{{#dateString}}{{date}}{{/dateString}}</h3>
                 <div class="container">
                     <table class="table">
                         <col width=256>
@@ -19,7 +25,7 @@
                             <td>{{description}}</td>
                         </tr>
                         {{/sessions}}
-                        <tr class="info"><td><b>TOTAL</b></td><td><b>{{#rounded}}{{total}}{{/rounded}} hours</b></td></tr>
+                        <tr class="info"><td><b>TOTAL</b></td><td><b>{{#rounded}}{{total}}{{/rounded}} hours</b> {{#wasted}}({{#rounded}}{{break}}{{/rounded}} hours spent on breaks){{/wasted}}</td></tr>
                     </table>
                 </div>
                 {{/days}}

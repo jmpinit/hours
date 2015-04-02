@@ -11,8 +11,6 @@ if (process.argv.length != 3) {
     process.exit(1);
 }
 
-var rate = 50; // per hour
-
 function check(condition, message) {
     if (condition == false) {
         console.log("ERROR!", message);
@@ -37,11 +35,19 @@ function millisToHours(millis) {
 }
 
 function parseLog(log) {
-    var parsed = { days: [] };
+    check(log.rate !== undefined, "no hourly rate defined");
+    check(typeof(log.rate) == 'number', "rate must be a number");
+
+    var parsed = {
+        name: log.name,
+        rate: log.rate,
+        days: []
+    };
 
     var days = log.days;
 
     var lastDate = new Date(days[0].date);
+    var total = 0;
 
     for (var i = 0; i < days.length; i++) {
         var day = days[i];
@@ -53,33 +59,49 @@ function parseLog(log) {
         lastDate = date;
 
         var parsedSessions = [];
-        var total = 0;
+        var dayTotal = 0;
+        var dayTotalBreak = 0;
 
         for (var j = 0; j < day.sessions.length; j++) {
             var sesh = day.sessions[j];
             var start = new Date(day.date + " " + sesh.start);
             var end = new Date(day.date + " " + sesh.end);
+            var less = sesh.less || 0;
 
             check(dateIsValid(start), "invalid start: " + JSON.stringify(sesh.start));
             check(dateIsValid(end), "invalid end: " + JSON.stringify(sesh.end));
             check(end > start, "end of session must be after start: " + JSON.stringify(sesh));
             check(sesh.description.length > 0, "empty description: " + JSON.stringify(sesh));
+            check(typeof(less) == 'number', "invalid 'less': " + JSON.stringify(sesh));
 
             parsedSessions.push({
                 start: start,
                 end: end,
+                less: less,
                 description: sesh.description
             });
 
-            total += millisToHours(end - start);
+            var workTime = millisToHours(end - start);
+            var breakTime = less / 60;
+            check(breakTime < workTime, "break time longer than session!: " + JSON.stringify(sesh));
+
+            dayTotal += workTime - breakTime;
+            dayTotalBreak += breakTime;
         }
 
         parsed.days.push({
             date: date,
             sessions: parsedSessions,
-            total: total
+            total: dayTotal,
+            break: dayTotalBreak,
+            wasted: dayTotalBreak > 0
         });
+
+        total += dayTotal;
     }
+
+    parsed.total = total;
+    parsed.earned = total * log.rate;
 
     return parsed;
 }
@@ -90,6 +112,11 @@ function getHours(log) {
             return hours + millisToHours(sesh.end - sesh.start);
         }, 0);
     }, 0);
+}
+
+function formatDate(date, start, end) {
+    var full = date.toUTCString();
+    return full.split(' ').slice(start, end).join(' ');
 }
 
 function generatePDF(log, callback) {
@@ -106,7 +133,7 @@ function generatePDF(log, callback) {
             return monthNames[day.date.getMonth()];
         }));
 
-        view.title = util.format("Timesheet for %s", months.join(', '));
+        view.title = util.format("Timesheet for %s to %s", formatDate(log.days[0].date, 1, 4), formatDate(log.days[log.days.length-1].date, 1, 4));
 
         view.hour = function() {
             return function (text, render) {
@@ -123,7 +150,7 @@ function generatePDF(log, callback) {
 
         view.dateString = function() {
             return function (text, render) {
-                return (new Date(render(text))).toDateString();
+                return formatDate(new Date(render(text)), 0, 4);
             };
         }
 
