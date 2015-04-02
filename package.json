@@ -1,0 +1,9 @@
+{
+  "author": "Owen Trueblood <owen@owentrueblood.me>",
+  "description": "For pretty timesheets.",
+  "dependencies": {
+    "jsonlint": "^1.6.2",
+    "mustache": "^2.0.0",
+    "underscore": "^1.8.3"
+  }
+}

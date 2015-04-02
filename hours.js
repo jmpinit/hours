@@ -1,6 +1,10 @@
 var fs = require('fs'),
+    util = require('util'),
     jsonlint = require('jsonlint'),
+    mustache = require('mustache'),
     _ = require('underscore');
+
+// TODO spellcheck
 
 if (process.argv.length != 3) {
     console.log("usage: node hours.js <time log filename>");
@@ -49,6 +53,7 @@ function parseLog(log) {
         lastDate = date;
 
         var parsedSessions = [];
+        var total = 0;
 
         for (var j = 0; j < day.sessions.length; j++) {
             var sesh = day.sessions[j];
@@ -65,11 +70,14 @@ function parseLog(log) {
                 end: end,
                 description: sesh.description
             });
+
+            total += millisToHours(end - start);
         }
 
         parsed.days.push({
             date: date,
-            sessions: parsedSessions
+            sessions: parsedSessions,
+            total: total
         });
     }
 
@@ -84,7 +92,56 @@ function getHours(log) {
     }, 0);
 }
 
+function generatePDF(log, callback) {
+    fs.readFile('templates/timesheet.mustache', 'utf8', function (err, template) {
+        if (err) check(false, err.toString());
+
+        var view = JSON.parse(JSON.stringify(log));
+        
+        var monthNames =
+        [   "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December" ];
+
+        var months = _.uniq(_.map(log.days, function(day) {
+            return monthNames[day.date.getMonth()];
+        }));
+
+        view.title = util.format("Timesheet for %s", months.join(', '));
+
+        view.hour = function() {
+            return function (text, render) {
+                var d = new Date(render(text));
+                var hour = '' + d.getHours();
+                var min = '' + d.getMinutes();
+
+                if (min.length == 1)
+                    min = '0' + min;
+
+                return hour + ":" + min;
+            };
+        }
+
+        view.dateString = function() {
+            return function (text, render) {
+                return (new Date(render(text))).toDateString();
+            };
+        }
+
+        view.rounded = function() {
+            return function (text, render) {
+                return Number(render(text)).toFixed(2);
+            };
+        }
+
+        var output = mustache.render(template, view);
+        console.log(output);
+        callback();
+    });
+}
+
 var filename = process.argv[2];
 var timelog = parseLog(jsonlint.parse(fs.readFileSync(filename, 'utf8')));
 
-console.log(getHours(timelog));
+generatePDF(timelog, function(err) {
+    if (err) check(false, err.toString());
+});

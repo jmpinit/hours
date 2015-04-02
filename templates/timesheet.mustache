@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Timesheet</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    </head>
+    <body>
+        <div class="container">
+            <h1>{{title}}</h1>
+                {{#days}}
+                <h2>{{#dateString}}{{date}}{{/dateString}}</h2>
+                <div class="container">
+                    <table class="table">
+                        <col width=256>
+                        {{#sessions}}
+                        <tr>
+                            <td><i>{{#hour}}{{start}}{{/hour}}</i> to <i>{{#hour}}{{end}}{{/hour}}</i></td>
+                            <td>{{description}}</td>
+                        </tr>
+                        {{/sessions}}
+                        <tr class="info"><td><b>TOTAL</b></td><td><b>{{#rounded}}{{total}}{{/rounded}} hours</b></td></tr>
+                    </table>
+                </div>
+                {{/days}}
+        </div>
+    </body>
+</html>
