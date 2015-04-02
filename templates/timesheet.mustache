@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Timesheet</title>
+        <title>Invoice</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
     </head>
     <body>
         <div class="container">
-            <h1 style="text-decoration: underline;">{{title}}</h1>
+            <h1 style="text-decoration: underline;">Invoice for {{period}}</h1>
                 <h2>Summary</h2>
                 <div class="container">
                     <p>Over this time period <b>{{name}}</b> worked <b>{{#rounded}}{{total}}{{/rounded}} hours</b>. At ${{rate}} per hour that comes to <b>${{#rounded}}{{earned}}{{/rounded}}.</b></p>

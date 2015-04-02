@@ -1,5 +1,6 @@
 var fs = require('fs'),
     util = require('util'),
+    exec = require('child_process').exec,
     jsonlint = require('jsonlint'),
     mustache = require('mustache'),
     _ = require('underscore');
@@ -133,7 +134,7 @@ function generatePDF(log, callback) {
             return monthNames[day.date.getMonth()];
         }));
 
-        view.title = util.format("Timesheet for %s to %s", formatDate(log.days[0].date, 1, 4), formatDate(log.days[log.days.length-1].date, 1, 4));
+        view.period = util.format("%s to %s", formatDate(log.days[0].date, 1, 4), formatDate(log.days[log.days.length-1].date, 1, 4));
 
         view.hour = function() {
             return function (text, render) {
@@ -161,8 +162,15 @@ function generatePDF(log, callback) {
         }
 
         var output = mustache.render(template, view);
-        console.log(output);
-        callback();
+
+        fs.writeFile("timesheet.html", output, function(err) {
+            if (err) check(false, err.toString());
+
+            exec('wkhtmltopdf timesheet.html timesheet.pdf', function (err, stdout, stderr) {
+                if (err) check(false, err.toString());
+                callback();
+            });
+        }); 
     });
 }
 
@@ -171,4 +179,5 @@ var timelog = parseLog(jsonlint.parse(fs.readFileSync(filename, 'utf8')));
 
 generatePDF(timelog, function(err) {
     if (err) check(false, err.toString());
+    console.log("done");
 });
