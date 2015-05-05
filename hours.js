@@ -72,7 +72,7 @@ function parseLog(log) {
             check(dateIsValid(start), "invalid start: " + JSON.stringify(sesh.start));
             check(dateIsValid(end), "invalid end: " + JSON.stringify(sesh.end));
             check(end > start, "end of session must be after start: " + JSON.stringify(sesh));
-            check(sesh.description.length > 0, "empty description: " + JSON.stringify(sesh));
+            check(typeof sesh.description !== 'undefined' && sesh.description.length > 0, "empty description: " + JSON.stringify(sesh));
             check(typeof(less) == 'number', "invalid 'less': " + JSON.stringify(sesh));
 
             parsedSessions.push({
